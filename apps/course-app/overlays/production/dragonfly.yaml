@@ -1,0 +1,8 @@
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
+metadata:
+  name: dragonfly
+  namespace: production
+spec:
+  replicas: 2
+  image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
