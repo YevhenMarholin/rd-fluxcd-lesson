@@ -446,12 +446,18 @@ Flux автоматично підтягнув зміни з репозитор�
 
 ```bash
 flux get sources git
+NAME            REVISION                SUSPENDED       READY   MESSAGE                                           
+flux-system     main@sha1:7f9603d6      False           True    stored artifact for revision 'main@sha1:7f9603d6'
 ```
 
 Перевірка Kustomization:
 
 ```bash
 flux get kustomizations
+NAME            REVISION                SUSPENDED       READY   MESSAGE                              
+app-dev         main@sha1:7f9603d6      False           True    Applied revision: main@sha1:7f9603d6
+app-prod        main@sha1:7f9603d6      False           True    Applied revision: main@sha1:7f9603d6
+flux-system     main@sha1:7f9603d6      False           True    Applied revision: main@sha1:7f9603d6
 ```
 
 Очікувано:
@@ -469,6 +475,16 @@ app-prod      True
 
 ```bash
 kubectl get ns
+NAME                        STATUS   AGE
+default                     Active   25m
+development                 Active   5m43s
+dragonfly-operator-system   Active   2m36s
+flux-system                 Active   6m8s
+kube-node-lease             Active   25m
+kube-public                 Active   25m
+kube-system                 Active   25m
+local-path-storage          Active   25m
+production                  Active   5m43s
 ```
 
 Очікувано:
@@ -489,8 +505,9 @@ kubectl get pods -n development
 Очікувано:
 
 ```bash
-course-app-...   1/1   Running
-dragonfly-...    1/1   Running
+NAME                         READY   STATUS    RESTARTS       AGE
+course-app-f6c77495b-gxht5   1/1     Running   2 (2m9s ago)   2m23s
+dragonfly-0                  1/1     Running   0              2m23s
 ```
 
 ---
@@ -504,11 +521,13 @@ kubectl get pods -n production
 Очікувано:
 
 ```bash
-course-app-...   1/1   Running
-course-app-...   1/1   Running
-course-app-...   1/1   Running
-dragonfly-...    1/1   Running
-dragonfly-...    1/1   Running
+@YevhenMarholin ➜ /workspaces/rd-fluxcd-lesson (main) $ kubectl get pods -n production
+NAME                          READY   STATUS    RESTARTS       AGE
+course-app-59954c744b-d9wk9   1/1     Running   2 (2m3s ago)   2m14s
+course-app-59954c744b-ngvdd   1/1     Running   2 (2m4s ago)   2m14s
+course-app-59954c744b-sgqwv   1/1     Running   2 (2m3s ago)   2m14s
+dragonfly-0                   1/1     Running   0              2m14s
+dragonfly-1                   1/1     Running   0              117s
 ```
 
 Перевірка HPA:
@@ -520,8 +539,9 @@ kubectl get hpa -n production
 Очікувано:
 
 ```bash
-NAME         REFERENCE               MINPODS   MAXPODS
-course-app   Deployment/course-app   3         10
+@YevhenMarholin ➜ /workspaces/rd-fluxcd-lesson (main) $ kubectl get hpa -n production
+NAME         REFERENCE               TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+course-app   Deployment/course-app   cpu: <unknown>/70%   3         10        3          2m28s
 ```
 
 ---
@@ -532,6 +552,7 @@ course-app   Deployment/course-app   3         10
 
 ```bash
 kubectl delete svc course-app -n production
+service "course-app" deleted from production namespace
 ```
 
 Після цього Flux автоматично відновив ресурс.
@@ -540,12 +561,15 @@ kubectl delete svc course-app -n production
 
 ```bash
 kubectl get svc -n production
+
 ```
 
 Очікувано:
 
 ```bash
-course-app   ClusterIP   8080/TCP
+NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+course-app   ClusterIP   10.96.45.91     <none>        8080/TCP   7s
+dragonfly    ClusterIP   10.96.225.252   <none>        6379/TCP   3m50s
 ```
 
 ---
@@ -565,9 +589,3 @@ course-app   ClusterIP   8080/TCP
 - підключено overlays до Flux через Kustomization resources
 - перевірено, що Flux автоматично застосовує зміни
 - виконано drift check: видалений Service було автоматично відновлено Flux CD
-
-Посилання на репозиторій:
-
-```text
-https://github.com/<YOUR_GITHUB_USERNAME>/rd-fluxcd-lesson
-```
